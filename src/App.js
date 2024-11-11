@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SpaceTunnel from './components/SpaceTunnel';
