@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/bebop/static/css/main.b3194498.chunk.css",
+    "main.js": "/bebop/static/js/main.a1b8647d.chunk.js",
+    "main.js.map": "/bebop/static/js/main.a1b8647d.chunk.js.map",
+    "runtime~main.js": "/bebop/static/js/runtime~main.7f5f51de.js",
+    "runtime~main.js.map": "/bebop/static/js/runtime~main.7f5f51de.js.map",
+    "static/js/2.ca150098.chunk.js": "/bebop/static/js/2.ca150098.chunk.js",
+    "static/js/2.ca150098.chunk.js.map": "/bebop/static/js/2.ca150098.chunk.js.map",
+    "index.html": "/bebop/index.html",
+    "precache-manifest.2a6f5bc739a2328d98b52ca9b417b207.js": "/bebop/precache-manifest.2a6f5bc739a2328d98b52ca9b417b207.js",
+    "service-worker.js": "/bebop/service-worker.js",
+    "static/css/main.b3194498.chunk.css.map": "/bebop/static/css/main.b3194498.chunk.css.map"
+  }
+}
