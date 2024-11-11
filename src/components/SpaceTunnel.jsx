@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 const SpaceTunnel = () => {
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(0.2);
+  const [hueOffset, setHueOffset] = useState(180); // New state for color control
   const [isControlOpen, setIsControlOpen] = useState(false);
 
   useEffect(() => {
@@ -18,8 +19,8 @@ const SpaceTunnel = () => {
 
   const getLEDColor = (stripIndex, progress) => {
     const hue = ((stripIndex / 15) * 360 + progress * 360) % 360;
-    const mappedHue = 180 + (hue % 120);
-    return `hsl(${mappedHue}, 100%, 50%)`; // Increased saturation and brightness
+    const mappedHue = hueOffset + (hue % 120); // Use hueOffset instead of fixed 180
+    return `hsl(${mappedHue}, 100%, 50%)`;
   };
 
   return (
@@ -56,23 +57,44 @@ const SpaceTunnel = () => {
             padding: '1rem',
             backgroundColor: 'rgba(26, 26, 26, 0.9)',
             borderRadius: '0.25rem',
-            color: 'white'
+            color: 'white',
+            minWidth: '200px'
           }}>
-            <label>
-              Speed: {speed.toFixed(1)}x
-              <input
-                type="range"
-                min="0.1"
-                max="3"
-                step="0.1"
-                value={speed}
-                onChange={(e) => setSpeed(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  marginTop: '0.5rem'
-                }}
-              />
-            </label>
+            <div style={{ marginBottom: '1rem' }}>
+              <label>
+                Speed: {speed.toFixed(1)}x
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={speed}
+                  onChange={(e) => setSpeed(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    marginTop: '0.5rem'
+                  }}
+                />
+              </label>
+            </div>
+
+            <div>
+              <label>
+                Color: {hueOffset}°
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  step="1"
+                  value={hueOffset}
+                  onChange={(e) => setHueOffset(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    marginTop: '0.5rem'
+                  }}
+                />
+              </label>
+            </div>
           </div>
         )}
       </div>
@@ -107,9 +129,9 @@ const SpaceTunnel = () => {
                   width: '90vmin',
                   height: '90vmin',
                   transform: `translate(-50%, -50%) translateZ(${z}px) scale(${scale})`,
-                  border: '3px solid',
+                  border: '5px solid',
                   borderColor: color,
-                  boxShadow: `0 0 20px 10px ${color}`,
+                  boxShadow: `0 0 25px 15px ${color}`,
                   opacity: 1 - depth * 0.3,
                 }}
               />
