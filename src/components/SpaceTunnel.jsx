@@ -6,25 +6,40 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ExpandingControls } from "./expanding-controls.tsx"
 
 // Pre-calculate colors for better performance
-const calculateLEDColors = (stripCount, hueOffset) => {
+const calculateLEDColors = (stripCount, hueOffset, progress) => {
   const colors = new Array(stripCount).fill(0).map((_, stripIndex) => {
-    const baseHue = ((stripIndex / stripCount) * 360) % 360
-    const mappedHue = hueOffset + (baseHue % 120)
-    return `hsl(${mappedHue}, 100%, 50%)`
-  })
-  return colors
-}
+    const hue = ((stripIndex / stripCount) * 360 + progress * 360) % 360;
+    const mappedHue = hueOffset + (hue % 120);
+    return `hsl(${mappedHue}, 100%, 50%)`;
+  });
+  return colors;
+};
 
-const SpaceTunnel = () => {
+const SpaceTunnel = ({ onZoomChange }) => {
   const [progress, setProgress] = useState(0)
   const [speed, setSpeed] = useState(0.2)
   const [hueOffset, setHueOffset] = useState(180)
   const [isZoomedIn, setIsZoomedIn] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [markdownContent] = useState(`Welcome to the Space Tunnel project! This interactive visualization combines sleek design with cutting-edge web technologies to create an immersive experience. The project features a dynamic color-changing tunnel effect, interactive glass button with cursor-following reflections, and smooth zoom transitions between views. Built with React, Next.js, Tailwind CSS, and Framer Motion for animations. Feel free to explore the code and experiment with the effects!`)
+  const [markdownContent, setMarkdownContent] = useState("")
 
-  // Memoize LED colors calculation
-  const ledColors = useMemo(() => calculateLEDColors(15, hueOffset), [hueOffset])
+  useEffect(() => {
+    fetch('/content/bebop-description.md')
+      .then(response => response.text())
+      .then(text => setMarkdownContent(text))
+      .catch(error => console.error('Error loading markdown content:', error))
+  }, [])
+
+  // Call onZoomChange whenever isZoomedIn changes
+  useEffect(() => {
+    onZoomChange?.(isZoomedIn);
+  }, [isZoomedIn, onZoomChange]);
+
+  // Memoize LED colors calculation with progress
+  const ledColors = useMemo(() => 
+    calculateLEDColors(15, hueOffset, progress), 
+    [hueOffset, progress]
+  );
 
   // Debounced mouse movement handler
   const handleMouseMove = useCallback((e) => {
@@ -206,7 +221,7 @@ const SpaceTunnel = () => {
             }}
           >
             <GlassButton 
-              text="Enter Space" 
+              text="Enter Bebop" 
               accentColor={ledColors[0]}
               onClick={() => setIsZoomedIn(true)} 
             />
