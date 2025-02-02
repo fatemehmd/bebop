@@ -1,47 +1,62 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import styles from "./SpaceTunnel.module.css"
 import { GlassButton } from "./glass-button.tsx"
 import { MarkdownContent } from "./markdown-content.tsx"
 import { motion, AnimatePresence } from "framer-motion"
+import { ExpandingControls } from "./expanding-controls.tsx"
+
+// Pre-calculate colors for better performance
+const calculateLEDColors = (stripCount, hueOffset) => {
+  const colors = new Array(stripCount).fill(0).map((_, stripIndex) => {
+    const baseHue = ((stripIndex / stripCount) * 360) % 360
+    const mappedHue = hueOffset + (baseHue % 120)
+    return `hsl(${mappedHue}, 100%, 50%)`
+  })
+  return colors
+}
 
 const SpaceTunnel = () => {
   const [progress, setProgress] = useState(0)
   const [speed, setSpeed] = useState(0.2)
   const [hueOffset, setHueOffset] = useState(180)
-  const [isControlOpen, setIsControlOpen] = useState(false)
   const [isZoomedIn, setIsZoomedIn] = useState(false)
-  const [markdownContent] = useState(`# Space Tunnel Project
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [markdownContent] = useState(`Welcome to the Space Tunnel project! This interactive visualization combines sleek design with cutting-edge web technologies to create an immersive experience. The project features a dynamic color-changing tunnel effect, interactive glass button with cursor-following reflections, and smooth zoom transitions between views. Built with React, Next.js, Tailwind CSS, and Framer Motion for animations. Feel free to explore the code and experiment with the effects!`)
 
-Welcome to the Space Tunnel project! This interactive visualization combines sleek design with cutting-edge web technologies to create an immersive experience.
+  // Memoize LED colors calculation
+  const ledColors = useMemo(() => calculateLEDColors(15, hueOffset), [hueOffset])
 
-## Key Features
+  // Debounced mouse movement handler
+  const handleMouseMove = useCallback((e) => {
+    requestAnimationFrame(() => {
+      const x = (e.clientX / window.innerWidth) * 2 - 1
+      const y = (e.clientY / window.innerHeight) * 2 - 1
+      setMousePosition({ x, y })
+    })
+  }, [])
 
-- Dynamic color-changing tunnel effect
-- Interactive glass button with cursor-following reflections
-- Smooth zoom transitions between views
-
-## Technologies Used
-
-- React
-- Next.js
-- Tailwind CSS
-- Framer Motion (for animations)
-
-## Learn More
-
-- [React Documentation](https://reactjs.org/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Framer Motion Documentation](https://www.framer.com/motion/)
-
-Feel free to explore the code and experiment with the effects!`)
-
+  // Optimized mouse tracking
   useEffect(() => {
-    if (isZoomedIn) return // Stop animation when zoomed in
-    
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [handleMouseMove])
+
+  // Optimized animation frame effect
+  useEffect(() => {
+    if (isZoomedIn) return
+
+    let lastTime = performance.now()
     let animationId
-    const animate = () => {
-      setProgress((prev) => (prev + speed * 0.005) % 1)
+
+    const animate = (currentTime) => {
+      const deltaTime = currentTime - lastTime
+      lastTime = currentTime
+
+      setProgress((prev) => {
+        const next = (prev + (speed * deltaTime * 0.001)) % 1
+        return Number.isFinite(next) ? next : prev
+      })
+
       animationId = requestAnimationFrame(animate)
     }
 
@@ -49,11 +64,14 @@ Feel free to explore the code and experiment with the effects!`)
     return () => cancelAnimationFrame(animationId)
   }, [speed, isZoomedIn])
 
-  const getLEDColor = (stripIndex, progress) => {
-    const hue = ((stripIndex / 15) * 360 + progress * 360) % 360
-    const mappedHue = hueOffset + (hue % 120)
-    return `hsl(${mappedHue}, 100%, 50%)`
-  }
+  // Memoized rotation calculation
+  const rotation = useMemo(() => {
+    const maxRotation = 10
+    return {
+      rotateX: -mousePosition.y * maxRotation,
+      rotateY: mousePosition.x * maxRotation
+    }
+  }, [mousePosition.x, mousePosition.y])
 
   return (
     <div
@@ -76,73 +94,18 @@ Feel free to explore the code and experiment with the effects!`)
             exit={{ opacity: 0 }}
             style={{
               position: "fixed",
-              top: "1rem",
-              right: "1rem",
+              bottom: "20px",
+              left: "50%",
+              transform: "translateX(-50%)",
               zIndex: 50,
             }}
           >
-            <button
-              onClick={() => setIsControlOpen(!isControlOpen)}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#1a1a1a",
-                color: "white",
-                border: "none",
-                borderRadius: "0.25rem",
-                cursor: "pointer",
-              }}
-            >
-              Controls
-            </button>
-
-            {isControlOpen && (
-              <div
-                style={{
-                  marginTop: "0.5rem",
-                  padding: "1rem",
-                  backgroundColor: "rgba(26, 26, 26, 0.9)",
-                  borderRadius: "0.25rem",
-                  color: "white",
-                  minWidth: "200px",
-                }}
-              >
-                <div style={{ marginBottom: "1rem" }}>
-                  <label>
-                    Speed: {speed.toFixed(1)}x
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="3"
-                      step="0.1"
-                      value={speed}
-                      onChange={(e) => setSpeed(Number(e.target.value))}
-                      style={{
-                        width: "100%",
-                        marginTop: "0.5rem",
-                      }}
-                    />
-                  </label>
-                </div>
-
-                <div>
-                  <label>
-                    Color: {hueOffset}°
-                    <input
-                      type="range"
-                      min="0"
-                      max="360"
-                      step="1"
-                      value={hueOffset}
-                      onChange={(e) => setHueOffset(Number(e.target.value))}
-                      style={{
-                        width: "100%",
-                        marginTop: "0.5rem",
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-            )}
+            <ExpandingControls
+              speed={speed}
+              hueOffset={hueOffset}
+              onSpeedChange={setSpeed}
+              onHueOffsetChange={setHueOffset}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -159,12 +122,15 @@ Feel free to explore the code and experiment with the effects!`)
           perspective: "1000px",
           transformStyle: "preserve-3d",
           perspectiveOrigin: "50% 50%",
+          willChange: "transform",
         }}
         animate={{
           scale: isZoomedIn ? 10 : 1,
           opacity: isZoomedIn ? 0 : 1,
           filter: `blur(${isZoomedIn ? 8 : 0}px)`,
           z: isZoomedIn ? 500 : 0,
+          rotateX: rotation.rotateX,
+          rotateY: rotation.rotateY,
         }}
         transition={{
           duration: 0.8,
@@ -173,18 +139,14 @@ Feel free to explore the code and experiment with the effects!`)
             damping: 25,
             stiffness: 100,
           },
-          opacity: {
-            duration: 0.6,
-            ease: "easeOut"
-          },
-          filter: {
-            duration: 0.6,
-            ease: "easeOut"
-          },
+          opacity: { duration: 0.6 },
+          filter: { duration: 0.6 },
           z: {
             duration: 0.8,
             ease: [0.4, 0, 0.2, 1]
-          }
+          },
+          rotateX: { duration: 0.2, ease: "linear" },
+          rotateY: { duration: 0.2, ease: "linear" }
         }}
       >
         <div 
@@ -194,13 +156,14 @@ Feel free to explore the code and experiment with the effects!`)
             width: "100%",
             height: "100%",
             transformStyle: "preserve-3d",
+            willChange: "transform",
           }}
         >
           {Array.from({ length: 15 }).map((_, index) => {
             const depth = index / 14
             const z = -depth * 1000
             const scale = 1 - depth * 0.6
-            const color = getLEDColor(index, progress)
+            const color = ledColors[index]
 
             return (
               <motion.div
@@ -211,46 +174,45 @@ Feel free to explore the code and experiment with the effects!`)
                   margin: "auto",
                   width: "100%",
                   height: "100%",
-                  transform: `translateZ(${z}px) scale(${scale})`,
+                  transform: `translate3d(0, 0, ${z}px) scale3d(${scale}, ${scale}, 1)`,
                   border: "5px solid",
                   borderColor: color,
                   boxShadow: `0 0 25px 15px ${color}`,
-                  opacity: 1 - depth * 0.3,
-                  transformStyle: "preserve-3d",
-                }}
-                animate={{
-                  scale: isZoomedIn ? scale * 1.2 : scale,
-                  z: isZoomedIn ? z * 1.5 : z,
-                }}
-                transition={{
-                  duration: 0.8,
-                  ease: [0.4, 0, 0.2, 1]
+                  willChange: "transform",
                 }}
               />
             )
           })}
         </div>
-
-        {/* Glass Button positioned in the center */}
-        <motion.div 
-          style={{ 
-            position: "absolute",
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 10 
-          }}
-          initial={{ opacity: 1 }}
-          animate={{ opacity: isZoomedIn ? 0 : 1 }}
-          transition={{ duration: 0.1 }}
-        >
-          <GlassButton 
-            text="Enter Space" 
-            accentColor={getLEDColor(0, progress)}
-            onClick={() => setIsZoomedIn(true)} 
-          />
-        </motion.div>
       </motion.div>
+
+      {/* Glass Button positioned in the center - Now outside the tunnel container */}
+      <AnimatePresence mode="wait">
+        {!isZoomedIn && (
+          <motion.div 
+            style={{ 
+              position: "fixed",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 10 
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.1, // Quick fade in/out
+              delay: isZoomedIn ? 0 : 0.8 // Only delay when fading in after zoom out
+            }}
+          >
+            <GlassButton 
+              text="Enter Space" 
+              accentColor={ledColors[0]}
+              onClick={() => setIsZoomedIn(true)} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Markdown Content */}
       <AnimatePresence>

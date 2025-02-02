@@ -20,8 +20,10 @@ export const MarkdownContent: FC<MarkdownContentProps> = ({ content, onZoomOut }
       </div>
 
       {/* Markdown content */}
-      <div className="prose prose-invert max-w-none">
-        <Markdown>{content}</Markdown>
+      <div className="mx-auto max-w-[700px] w-full pt-32">
+        <div className="prose prose-invert prose-pre:bg-white/5 prose-pre:backdrop-blur-md max-w-none font-mono text-[15px] leading-relaxed">
+          <Markdown>{content}</Markdown>
+        </div>
       </div>
     </div>
   )
