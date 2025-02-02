@@ -1,0 +1,22 @@
+.tunnelContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+}
+
+@media (min-width: 1200px) {
+  .tunnelContainer {
+    max-width: min(calc(100vh - 70px), calc(100vw - 70px));
+    max-height: min(calc(100vh - 70px), calc(100vw - 70px));
+  }
+}
+
+@media (max-width: 1199px) {
+  .tunnelContainer {
+    max-width: calc(100vw - 70px);
+    max-height: calc(100vh - 70px);
+  }
+} 
