@@ -309,6 +309,7 @@ const SpaceTunnel = ({ onZoomChange }) => {
             <MarkdownContent 
               content={markdownContent} 
               onZoomOut={() => setIsZoomedIn(false)} 
+              accentColor={accentColor}
             />
           </motion.div>
         )}
