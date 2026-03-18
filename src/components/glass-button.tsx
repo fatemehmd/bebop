@@ -45,7 +45,8 @@ export const GlassButton = ({ text = "Enter", accentColor = "hsl(180, 100%, 50%)
   return (
     <button
       onClick={onClick}
-      className="group relative px-16 py-4 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
+      className="group relative px-6 py-2 sm:px-8 sm:py-3 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
+      style={{ minWidth: "min(12rem, 60vw)" }}
     >
       {/* Base glass effect layer */}
       <div className="absolute inset-0 rounded-full bg-white/5 backdrop-blur-md" />
@@ -73,7 +74,7 @@ export const GlassButton = ({ text = "Enter", accentColor = "hsl(180, 100%, 50%)
 
       {/* Button text with glow effect */}
       <span
-        className="relative font-bold tracking-wider text-white/90"
+        className="relative font-semibold tracking-wide text-white/90 text-xs sm:text-sm"
         style={{
           textShadow: `0 0 10px ${accentColor}, 0 0 20px ${accentColor}40`,
         }}

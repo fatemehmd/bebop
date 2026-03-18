@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react"
+import React, { useEffect, useState, useCallback, useMemo } from "react"
 import styles from "./SpaceTunnel.module.css"
-import { GlassButton } from "./glass-button.tsx"
-import { MarkdownContent } from "./markdown-content.tsx"
+import { GlassButton } from "./glass-button"
+import { MarkdownContent } from "./markdown-content"
 import { motion, AnimatePresence } from "framer-motion"
-import { ExpandingControls } from "./expanding-controls.tsx"
+import { ExpandingControls } from "./expanding-controls"
 
 // Pre-calculate colors for better performance
 const calculateLEDColors = (stripCount, hueOffset, progress) => {
@@ -32,8 +32,10 @@ const SpaceTunnel = ({ onZoomChange }) => {
 
   // Call onZoomChange whenever isZoomedIn changes
   useEffect(() => {
-    onZoomChange?.(isZoomedIn);
-  }, [isZoomedIn, onZoomChange]);
+    if (onZoomChange) {
+      onZoomChange(isZoomedIn)
+    }
+  }, [isZoomedIn, onZoomChange])
 
   // Memoize LED colors calculation with progress
   const ledColors = useMemo(() => 
@@ -221,7 +223,7 @@ const SpaceTunnel = ({ onZoomChange }) => {
             }}
           >
             <GlassButton 
-              text="Enter Bebop" 
+              text="Enter" 
               accentColor={ledColors[0]}
               onClick={() => setIsZoomedIn(true)} 
             />
@@ -259,4 +261,3 @@ const SpaceTunnel = ({ onZoomChange }) => {
 }
 
 export default SpaceTunnel
-

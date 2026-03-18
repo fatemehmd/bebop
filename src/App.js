@@ -1,6 +1,6 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-import SpaceTunnel from './components/SpaceTunnel';
+import SpaceTunnel from './components/SpaceTunnel.jsx';
 import BoidSimulation from './components/BoidSimulation';
 import SpacePiano from './components/SpacePiano';
 

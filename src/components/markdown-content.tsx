@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import Markdown from 'markdown-to-jsx'
-import { GlassButton } from './glass-button.tsx'
+import { GlassButton } from './glass-button'
 
 interface MarkdownContentProps {
   content: string
