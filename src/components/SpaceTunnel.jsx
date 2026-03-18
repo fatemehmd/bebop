@@ -41,6 +41,7 @@ const SpaceTunnel = ({ onZoomChange }) => {
 
   // Memoize LED colors calculation with progress
   const ledColors = useMemo(() => calculateLEDColors(progress, hueOffset), [hueOffset, progress])
+  const accentColor = ledColors[0]
 
   const ringLayout = useMemo(() => {
     return Array.from({ length: RING_COUNT }).map((_, index) => {
@@ -144,6 +145,7 @@ const SpaceTunnel = ({ onZoomChange }) => {
               hueOffset={hueOffset}
               onSpeedChange={setSpeed}
               onHueOffsetChange={setHueOffset}
+              accentColor={accentColor}
             />
           </motion.div>
         )}
@@ -237,7 +239,10 @@ const SpaceTunnel = ({ onZoomChange }) => {
               left: "50%",
               top: "50%",
               transform: "translate(-50%, -50%)",
-              zIndex: 10 
+              zIndex: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -258,16 +263,21 @@ const SpaceTunnel = ({ onZoomChange }) => {
                 }
               }}
               style={{
-                display: "inline-block",
-                padding: "0.25rem 0.5rem",
-                fontSize: "1rem",
-                fontWeight: 600,
-                letterSpacing: "0.3em",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0.3rem 0.6rem",
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                letterSpacing: "0.25em",
                 textTransform: "uppercase",
-                color: "#fff",
+                color: "rgba(255, 255, 255, 0.92)",
                 cursor: "pointer",
-                textShadow: `0 0 30px ${ledColors[0]}, 0 0 60px ${ledColors[0]}`,
-                outline: "none"
+                textAlign: "center",
+                lineHeight: 1,
+                textShadow: `0 0 12px ${accentColor}, 0 0 30px ${accentColor}66`,
+                outline: "none",
+                filter: `drop-shadow(0 0 18px ${accentColor}55)`
               }}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.94 }}

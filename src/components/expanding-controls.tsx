@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 
 interface ExpandingControlsProps {
   speed: number
   hueOffset: number
   onSpeedChange: (speed: number) => void
   onHueOffsetChange: (hueOffset: number) => void
+  accentColor?: string
 }
 
 export function ExpandingControls({
@@ -13,9 +14,11 @@ export function ExpandingControls({
   hueOffset,
   onSpeedChange,
   onHueOffsetChange,
+  accentColor,
 }: ExpandingControlsProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const controlsRef = useRef<HTMLDivElement>(null)
+  const accent = accentColor ?? "hsl(180, 100%, 50%)"
 
   // Handle click outside
   useEffect(() => {
@@ -33,58 +36,69 @@ export function ExpandingControls({
     }
   }, [isExpanded])
 
+  const containerStyle: React.CSSProperties = {
+    overflow: "hidden",
+    padding: isExpanded ? "1rem 1.25rem 0.75rem" : 0,
+    background: isExpanded ? "rgba(5, 12, 32, 0.65)" : "transparent",
+    backdropFilter: isExpanded ? "blur(16px)" : "none",
+    border: `1px solid ${isExpanded ? "rgba(255, 255, 255, 0.2)" : "transparent"}`,
+    boxShadow: isExpanded ? `0 0 22px ${accent}33` : "none",
+    transition: "all 0.35s ease",
+  }
+
   return (
     <motion.div
       ref={controlsRef}
-      className="relative group"
+      className="relative flex flex-col items-center"
       initial={false}
       animate={{
-        width: isExpanded ? 250 : 'auto',
-        height: isExpanded ? 'auto' : 48,
-        borderRadius: isExpanded ? 10 : 9999,
+        width: isExpanded ? 260 : 'auto',
+        borderRadius: isExpanded ? 12 : 0,
       }}
       transition={{
         type: "spring",
         stiffness: 500,
         damping: 30,
       }}
-      style={{
-        overflow: "hidden",
-      }}
+      style={containerStyle}
     >
-      {/* Base glass effect layer */}
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-md" style={{ borderRadius: "inherit" }} />
-
-      {/* Static inner glow effect */}
-      <div 
-        className="absolute inset-0 opacity-20 group-hover:opacity-30"
-        style={{ 
-          borderRadius: "inherit",
-          background: "radial-gradient(circle at center, hsl(180, 100%, 50%), transparent 100%)"
-        }}
-      />
-
-      {/* Glass edge highlights and shadows */}
-      <div className="absolute inset-0 shadow-inner" style={{ borderRadius: "inherit" }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white/5" style={{ borderRadius: "inherit" }} />
-      <div className="absolute inset-0 border border-white/20" style={{ borderRadius: "inherit" }} />
-
-      {/* Button that remains visible and handles expansion */}
-      <motion.button
-        className="relative w-full h-full flex items-center justify-center text-white/90 font-bold tracking-wider"
+      <motion.span
+        role="button"
+        tabIndex={0}
         onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault()
+            setIsExpanded((prev) => !prev)
+          }
+        }}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.94 }}
         animate={{
-          opacity: isExpanded ? 0 : 1,
-          y: isExpanded ? -20 : 0,
+          opacity: isExpanded ? 0.85 : 1,
+          y: isExpanded ? -2 : 0,
         }}
         style={{
-          position: isExpanded ? "absolute" : "relative",
-          inset: 0,
-          textShadow: "0 0 10px hsl(180, 100%, 50%), 0 0 20px hsla(180, 100%, 50%, 0.4)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0.25rem 0.6rem",
+          fontSize: "0.85rem",
+          fontWeight: 600,
+          letterSpacing: "0.25em",
+          textTransform: "uppercase",
+          color: "rgba(255, 255, 255, 0.92)",
+          cursor: "pointer",
+          textAlign: "center",
+          lineHeight: 1,
+          textShadow: `0 0 12px ${accent}, 0 0 30px ${accent}66`,
+          filter: `drop-shadow(0 0 18px ${accent}55)`,
+          outline: "none",
+          marginBottom: isExpanded ? "0.75rem" : 0,
         }}
       >
         Controls
-      </motion.button>
+      </motion.span>
 
       {/* Controls Panel */}
       <motion.div
@@ -93,9 +107,10 @@ export function ExpandingControls({
           y: isExpanded ? 0 : 20,
         }}
         style={{
-          padding: "1.5rem",
+          padding: isExpanded ? "0 0 0.25rem" : 0,
           visibility: isExpanded ? "visible" : "hidden",
           position: "relative",
+          width: "100%",
         }}
       >
         <div className="mb-6">
