@@ -1,19 +1,20 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react"
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import styles from "./SpaceTunnel.module.css"
 import { GlassButton } from "./glass-button"
 import { MarkdownContent } from "./markdown-content"
 import { motion, AnimatePresence } from "framer-motion"
 import { ExpandingControls } from "./expanding-controls"
 
+const RING_COUNT = 15
+
 // Pre-calculate colors for better performance
-const calculateLEDColors = (stripCount, hueOffset, progress) => {
-  const colors = new Array(stripCount).fill(0).map((_, stripIndex) => {
-    const hue = ((stripIndex / stripCount) * 360 + progress * 360) % 360;
-    const mappedHue = hueOffset + (hue % 120);
-    return `hsl(${mappedHue}, 100%, 50%)`;
+const calculateLEDColors = (progress, hueOffset) => {
+  return Array.from({ length: RING_COUNT }).map((_, stripIndex) => {
+    const hue = ((stripIndex / RING_COUNT) * 360 + progress * 360) % 360
+    const mappedHue = hueOffset + (hue % 120)
+    return `hsl(${mappedHue}, 100%, 50%)`
   });
-  return colors;
-};
+}
 
 const SpaceTunnel = ({ onZoomChange }) => {
   const [progress, setProgress] = useState(0)
@@ -22,6 +23,8 @@ const SpaceTunnel = ({ onZoomChange }) => {
   const [isZoomedIn, setIsZoomedIn] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [markdownContent, setMarkdownContent] = useState("")
+  const targetProgressRef = useRef(0)
+  const smoothedProgressRef = useRef(0)
 
   useEffect(() => {
     fetch('/content/bebop-description.md')
@@ -38,10 +41,17 @@ const SpaceTunnel = ({ onZoomChange }) => {
   }, [isZoomedIn, onZoomChange])
 
   // Memoize LED colors calculation with progress
-  const ledColors = useMemo(() => 
-    calculateLEDColors(15, hueOffset, progress), 
-    [hueOffset, progress]
-  );
+  const ledColors = useMemo(() => calculateLEDColors(progress, hueOffset), [hueOffset, progress])
+
+  const ringLayout = useMemo(() => {
+    return Array.from({ length: RING_COUNT }).map((_, index) => {
+      const depth = index / (RING_COUNT - 1)
+      return {
+        z: -depth * 1000,
+        scale: 1 - depth * 0.6
+      }
+    })
+  }, [])
 
   // Debounced mouse movement handler
   const handleMouseMove = useCallback((e) => {
@@ -58,7 +68,7 @@ const SpaceTunnel = ({ onZoomChange }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [handleMouseMove])
 
-  // Optimized animation frame effect
+  // Optimized animation frame effect with smoothing
   useEffect(() => {
     if (isZoomedIn) return
 
@@ -66,13 +76,26 @@ const SpaceTunnel = ({ onZoomChange }) => {
     let animationId
 
     const animate = (currentTime) => {
-      const deltaTime = currentTime - lastTime
+      let deltaTime = currentTime - lastTime
       lastTime = currentTime
+      deltaTime = Math.min(deltaTime, 32)
 
-      setProgress((prev) => {
-        const next = (prev + (speed * deltaTime * 0.001)) % 1
-        return Number.isFinite(next) ? next : prev
-      })
+      // Advance the target progress
+      const target = (targetProgressRef.current + speed * deltaTime * 0.001) % 1
+      targetProgressRef.current = target
+
+      // Smoothly follow the target to avoid abrupt jumps
+      const smoothingStrength = 1 - Math.pow(0.15, deltaTime / 16.67)
+      let current = smoothedProgressRef.current
+      let diff = target - current
+
+      if (diff > 0.5) diff -= 1
+      if (diff < -0.5) diff += 1
+
+      const next = (current + diff * smoothingStrength + 1) % 1
+      smoothedProgressRef.current = next
+
+      setProgress(next)
 
       animationId = requestAnimationFrame(animate)
     }
@@ -176,10 +199,7 @@ const SpaceTunnel = ({ onZoomChange }) => {
             willChange: "transform",
           }}
         >
-          {Array.from({ length: 15 }).map((_, index) => {
-            const depth = index / 14
-            const z = -depth * 1000
-            const scale = 1 - depth * 0.6
+          {ringLayout.map(({ z, scale }, index) => {
             const color = ledColors[index]
 
             return (
@@ -192,10 +212,16 @@ const SpaceTunnel = ({ onZoomChange }) => {
                   width: "100%",
                   height: "100%",
                   transform: `translate3d(0, 0, ${z}px) scale3d(${scale}, ${scale}, 1)`,
-                  border: "5px solid",
+                  border: "5px solid transparent",
+                  willChange: "transform, border-color, box-shadow",
+                }}
+                animate={{
                   borderColor: color,
                   boxShadow: `0 0 25px 15px ${color}`,
-                  willChange: "transform",
+                }}
+                transition={{
+                  duration: 0.25,
+                  ease: "linear",
                 }}
               />
             )
