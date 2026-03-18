@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import styles from "./SpaceTunnel.module.css"
-import { GlassButton } from "./glass-button"
 import { MarkdownContent } from "./markdown-content"
 import { motion, AnimatePresence } from "framer-motion"
 import { ExpandingControls } from "./expanding-controls"
@@ -232,8 +231,8 @@ const SpaceTunnel = ({ onZoomChange }) => {
       {/* Glass Button positioned in the center - Now outside the tunnel container */}
       <AnimatePresence mode="wait">
         {!isZoomedIn && (
-          <motion.div 
-            style={{ 
+          <motion.div
+            style={{
               position: "fixed",
               left: "50%",
               top: "50%",
@@ -248,11 +247,33 @@ const SpaceTunnel = ({ onZoomChange }) => {
               delay: isZoomedIn ? 0 : 0.8 // Only delay when fading in after zoom out
             }}
           >
-            <GlassButton 
-              text="Enter" 
-              accentColor={ledColors[0]}
-              onClick={() => setIsZoomedIn(true)} 
-            />
+            <motion.span
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsZoomedIn(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  setIsZoomedIn(true)
+                }
+              }}
+              style={{
+                display: "inline-block",
+                padding: "0.25rem 0.5rem",
+                fontSize: "1rem",
+                fontWeight: 600,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: "#fff",
+                cursor: "pointer",
+                textShadow: `0 0 30px ${ledColors[0]}, 0 0 60px ${ledColors[0]}`,
+                outline: "none"
+              }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
+            >
+              Enter
+            </motion.span>
           </motion.div>
         )}
       </AnimatePresence>
